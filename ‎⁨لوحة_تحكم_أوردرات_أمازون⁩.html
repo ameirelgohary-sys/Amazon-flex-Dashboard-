@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Orders Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .amazon-gradient {
+            background: linear-gradient(135deg, #ff9900 0%, #e67e22 100%);
+        }
+        .amazon-text-gradient {
+            background: linear-gradient(135deg, #ff9900 0%, #f39c12 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .mobile-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 0.75rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-24 md:pb-12">
+
+    <!-- Compact Mobile Header -->
+    <header class="glass-panel sticky top-0 z-40 border-b border-slate-700/50 shadow-xl mb-4 sm:mb-6">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center gap-2">
+            <div class="flex items-center space-x-2.5 space-x-reverse">
+                <!-- Custom Amazon Delivery Logo SVG -->
+                <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center shadow-lg shadow-amber-500/20 overflow-hidden shrink-0">
+                    <svg class="w-full h-full p-1" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="100" height="100" rx="20" fill="#0b1329"/>
+                        <path d="M10 20L90 20M10 50L90 50M10 80L90 80M30 10L30 90M60 10L60 90" stroke="#1e293b" stroke-width="2"/>
+                        <path d="M15 26H35M10 33H30M15 40H26" stroke="#ff8c00" stroke-width="3.5" stroke-linecap="round"/>
+                        <path d="M47 23L17 77H32L38 65H58L64 77H79L47 23ZM43 53L48 41L53 53H43Z" fill="#ffffff"/>
+                        <path d="M10 58C25 45 60 40 76 43L70 36M76 43L71 49" stroke="url(#amber-grad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <g transform="translate(62, 12)">
+                            <path d="M14 0C6.27 0 0 6.27 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.27 21.73 0 14 0ZM14 19C11.24 19 9 16.76 9 14C9 11.24 11.24 9 14 9C16.76 9 19 11.24 19 14C19 16.76 16.76 19 14 19Z" fill="#ff7700"/>
+                            <ellipse cx="14" cy="36" rx="9" ry="2.5" fill="none" stroke="#ff7700" stroke-width="2"/>
+                        </g>
+                        <g transform="translate(60, 52)">
+                            <path d="M2 12L18 4L34 12V28L18 36L2 28V12Z" fill="#f59e0b" stroke="#d97706" stroke-width="1.5"/>
+                            <path d="M18 4V36M2 12L18 20L34 12" stroke="#78350f" stroke-width="2"/>
+                            <path d="M22 24H30M22 28H28" stroke="#78350f" stroke-width="1.5" stroke-linecap="round"/>
+                        </g>
+                        <defs>
+                            <linearGradient id="amber-grad" x1="10" y1="58" x2="76" y2="43" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#ff4500"/>
+                                <stop offset="0.5" stop-color="#ff8c00"/>
+                                <stop offset="1" stop-color="#ffc107"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-xl font-extrabold tracking-tight" id="headerTitle">لوحة تحكم <span class="amazon-text-gradient">أمازون</span></h1>
+                    <p class="text-[10px] sm:text-xs text-slate-400" id="headerSub">إدارة الورديات والأرباح والمصاريف</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-1.5 sm:gap-2">
+                <!-- Backup & Export Data Button -->
+                <button onclick="exportCSV()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold border border-emerald-500/30 rounded-lg transition flex items-center gap-1 text-xs shadow-md" title="تصدير Excel/CSV">
+                    <i class="fa-solid fa-file-csv"></i>
+                    <span class="hidden sm:inline">CSV</span>
+                </button>
+
+                <!-- Language Toggle Button -->
+                <button onclick="toggleLanguage()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold border border-amber-500/30 rounded-lg transition flex items-center gap-1.5 text-xs shadow-md">
+                    <i class="fa-solid fa-globe"></i>
+                    <span id="langBtnText">EN</span>
+                </button>
+
+                <!-- Top Prominent Add Order Button -->
+                <button onclick="openModal()" class="amazon-gradient hover:opacity-90 text-slate-950 font-extrabold px-3 py-1.5 rounded-lg transition duration-200 flex items-center gap-1.5 shadow-lg shadow-amber-500/30 text-xs sm:text-sm">
+                    <i class="fa-solid fa-plus text-sm"></i>
+                    <span id="btnAddOrder">إضافة أوردر</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
+        
+        <!-- Smart Compact Mobile Stats Widget -->
+        <div class="glass-panel p-4 rounded-2xl border border-slate-700/60 shadow-lg">
+            <!-- Top Summary Row -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pb-3 border-b border-slate-700/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-base shrink-0">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate" data-i18n="completedIncome">صافي الأرباح</p>
+                        <h3 class="text-lg sm:text-2xl font-extrabold text-emerald-400 truncate" id="netIncome">$0.00</h3>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-base shrink-0">
+                        <i class="fa-solid fa-gas-pump"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate" data-i18n="totalFuel">مصاريف البنزين</p>
+                        <h3 class="text-lg sm:text-2xl font-extrabold text-rose-400 truncate" id="totalFuel">$0.00</h3>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-base shrink-0">
+                        <i class="fa-solid fa-route"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate" data-i18n="totalMiles">إجمالي الأميال</p>
+                        <h3 class="text-lg sm:text-2xl font-extrabold text-purple-400 truncate" id="totalMiles">0 mi</h3>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-base shrink-0">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate" data-i18n="totalPackages">الباكجات</p>
+                        <h3 class="text-lg sm:text-2xl font-extrabold text-amber-400 truncate" id="totalPackages">0</h3>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-base shrink-0">
+                        <i class="fa-solid fa-clock font-bold"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate" data-i18n="avgHourlyRate">متوسط السعر/ساعة</p>
+                        <h3 class="text-lg sm:text-2xl font-extrabold text-sky-400 truncate" id="avgHourlyRate">$0.00/h</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Sub-details bar -->
+            <div class="pt-3 flex items-center justify-between text-xs text-slate-400 flex-wrap gap-2">
+                <div class="flex items-center gap-3 text-[11px] sm:text-xs">
+                    <span id="grossIncome" class="text-slate-300">الإجمالي قبل البنزين: <strong class="text-emerald-400">$0.00</strong></span>
+                    <span class="text-slate-600">|</span>
+                    <span id="pendingIncome" class="text-slate-300">قيد الانتظار: <strong class="text-amber-400">$0.00</strong></span>
+                </div>
+                <div class="flex items-center gap-1 text-[11px] text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20">
+                    <i class="fa-solid fa-location-dot text-[10px]"></i>
+                    <span data-i18n="topLocation">الأكثر تكراراً:</span>
+                    <strong id="topLocation" class="truncate max-w-[100px]">-</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compact Search & Filter Toolbar -->
+        <div class="glass-panel p-3 rounded-2xl flex flex-col gap-2.5">
+            <div class="flex items-center gap-2">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute right-3 top-3 left-auto rtl:right-3 rtl:left-auto ltr:left-3 ltr:right-auto text-slate-400 text-xs"></i>
+                    <input type="text" id="searchInput" oninput="filterOrders()" placeholder="بحث بالموقع، اليوم، أو الملاحظات..." class="w-full pr-9 pl-3 rtl:pr-9 rtl:pl-3 ltr:pl-9 ltr:pr-3 py-1.5 bg-slate-800/80 border border-slate-700 rounded-xl text-xs focus:outline-none focus:border-amber-500 text-slate-200">
+                </div>
+                <select id="statusFilter" onchange="filterOrders()" class="bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-semibold max-w-[130px] sm:max-w-none">
+                    <option value="pending" data-i18n="optPending">⏳ القادمة</option>
+                    <option value="completed" data-i18n="optCompleted">✅ المكتملة</option>
+                    <option value="ALL" data-i18n="optAll">🌐 الكل</option>
+                </select>
+                <select id="dayFilter" onchange="filterOrders()" class="bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-amber-500 max-w-[100px] sm:max-w-none">
+                    <option value="ALL" data-i18n="optAllDays">الأيام</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                    <option value="Sunday">Sunday</option>
+                    <option value="Monday">Monday</option>
+                </select>
+            </div>
+
+            <!-- Additional Options Button Bar -->
+            <div class="flex items-center justify-between pt-1 border-t border-slate-800 text-xs">
+                <span id="showingCount" class="text-[11px] text-slate-400">Show 0 of 0</span>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="resetToDefaultData()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium rounded-lg transition border border-slate-700 flex items-center gap-1" title="استعادة">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span data-i18n="btnReset">استعادة الصورة</span>
+                    </button>
+                    <button onclick="clearAllOrders()" class="px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[11px] font-medium rounded-lg transition border border-rose-500/20 flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span data-i18n="btnClear">مسح</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Responsive List/Grid View -->
+        <div class="glass-panel rounded-2xl overflow-hidden shadow-xl p-3 sm:p-4">
+            <h2 class="font-bold text-sm sm:text-base text-slate-100 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-amber-500"></i>
+                <span data-i18n="tableTitle">قائمة الورديات والباكجات</span>
+            </h2>
+
+            <!-- Cards Container for Mobile & Compact Screens -->
+            <div id="mobileCardsContainer" class="mobile-card-grid md:hidden">
+                <!-- Dynamic Mobile Cards Inserted Here -->
+            </div>
+
+            <!-- Table Container for Desktop Screens -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="w-full text-right rtl:text-right ltr:text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-800/40 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-700/50">
+                            <th class="p-3 font-semibold" data-i18n="thDayDate">اليوم والتاريخ</th>
+                            <th class="p-3 font-semibold" data-i18n="thLocation">الموقع (Location)</th>
+                            <th class="p-3 font-semibold" data-i18n="thTime">التوقيت والمعدل</th>
+                            <th class="p-3 font-semibold" data-i18n="thCounts">الأميايل / الباكجات</th>
+                            <th class="p-3 font-semibold" data-i18n="thAmount">المبلغ والوقود</th>
+                            <th class="p-3 font-semibold text-center" data-i18n="thActions">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody" class="divide-y divide-slate-800/60 text-sm">
+                        <!-- Dynamic Content Inserted Here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden p-8 text-center text-slate-500">
+                <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-600 text-xl">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+                <p class="text-sm font-semibold text-slate-400" data-i18n="emptyTitle">لا توجد أوردرات مسجلة</p>
+                <p class="text-xs mt-1" data-i18n="emptySub">قم بإضافة أوردر جديد أو أعد تجميع البيانات.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Form (Add / Edit) -->
+    <div id="orderModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
+        <div class="glass-panel w-full max-w-md rounded-2xl border border-slate-700 shadow-2xl overflow-hidden transform transition-all my-auto">
+            <div class="p-5 border-b border-slate-700/60 flex justify-between items-center bg-slate-800/50">
+                <h3 id="modalTitle" class="font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-amber-500"></i>
+                    <span>إضافة أوردر جديد</span>
+                </h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200 transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="orderForm" onsubmit="saveOrder(event)" class="p-5 space-y-3.5">
+                <input type="hidden" id="editIndex" value="-1">
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lblDayDate">اليوم والتاريخ *</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="orderDay" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                            <option value="Sunday">Sunday</option>
+                            <option value="Monday">Monday</option>
+                        </select>
+                        <input type="text" id="orderDate" required placeholder="مثال: 11/10" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lblLocation">الموقع (Location) *</label>
+                        <input type="text" id="orderLocation" required onchange="autoEstimateMiles()" placeholder="مثال: Bloomington" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lblMiles">الأميال المتوقعة (Miles)</label>
+                        <input type="number" step="1" id="orderMiles" placeholder="تقدير تلقائي..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lblMapUrl">رابط اللوكيشن / الخريطة (Google Maps URL)</label>
+                    <input type="url" id="orderMapUrl" placeholder="https://maps.google.com/..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lblTime">التوقيت (Time) *</label>
+                        <input type="text" id="orderTime" required placeholder="2:30 am - 5:30 am" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lblHours">الساعات</label>
+                        <input type="number" step="0.5" id="orderHours" placeholder="3.0" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lblStops">عدد المحطات</label>
+                        <input type="number" id="orderStops" placeholder="1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lblPackages">عدد الباكجات</label>
+                        <input type="number" id="orderPackages" placeholder="15" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lblAmount">المبلغ الإجمالي ($) *</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 rtl:left-auto rtl:right-3 ltr:right-auto ltr:left-3 text-slate-400 font-semibold">$</span>
+                            <input type="number" step="0.01" id="orderAmount" required placeholder="75.00" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-8 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lblFuel">مصاريف البنزين ($)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 rtl:left-auto rtl:right-3 ltr:right-auto ltr:left-3 text-rose-400 font-semibold">$</span>
+                            <input type="number" step="0.01" id="orderFuel" placeholder="10.00" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-8 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500 text-rose-300">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lblNotes">ملاحظات / Gate Code</label>
+                    <input type="text" id="orderNotes" placeholder="كود البوابة أو ملاحظة للوردية..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div class="pt-3 flex items-center justify-end gap-3 border-t border-slate-700/50">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-semibold transition" data-i18n="btnCancel">إلغاء</button>
+                    <button type="submit" class="px-5 py-2 amazon-gradient text-slate-950 font-bold rounded-xl text-sm hover:opacity-90 transition shadow-lg shadow-amber-500/20" data-i18n="btnSave">حفظ الأوردر</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 left-6 rtl:left-6 rtl:right-auto ltr:right-6 ltr:left-auto z-50 bg-slate-800 border border-slate-700 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 translate-y-24 opacity-0 transition-all duration-300">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toastMessage" class="text-sm font-medium">Done!</span>
+    </div>
+
+    <script>
+        // Language Dictionary
+        const i18n = {
+            ar: {
+                headerTitle: 'لوحة تحكم <span class="amazon-text-gradient">أوردرات أمازون</span>',
+                headerSub: 'إدارة الورديات والأرباح والمصاريف والأميال',
+                btnAddOrder: 'إضافة أوردر',
+                completedIncome: 'صافي الأرباح',
+                totalFuel: 'مصاريف البنزين',
+                totalMiles: 'إجمالي الأميال',
+                pendingInc: 'قيد الانتظار',
+                totalPackages: 'إجمالي الباكجات',
+                deliveredPkgs: 'تم توصيل',
+                pkgsText: 'طرد',
+                avgHourlyRate: 'متوسط السعر/ساعة',
+                topLocation: 'الموقع الأكثر تكراراً',
+                searchPlaceholder: 'بحث بالموقع، اليوم، أو الملاحظات...',
+                optPending: '⏳ الأوردرات القادمة',
+                optCompleted: '✅ الأوردرات المكتملة',
+                optAll: '🌐 عرض جميع الأوردرات',
+                optAllDays: 'جميع الأيام',
+                btnReset: 'استعادة البيانات',
+                btnClear: 'مسح الكل',
+                tableTitle: 'قائمة الورديات والباكجات والأميال',
+                thDayDate: 'اليوم والتاريخ',
+                thLocation: 'الموقع (Location)',
+                thTime: 'التوقيت والمعدل',
+                thCounts: 'الأميال / الباكجات',
+                thAmount: 'المبلغ والوقود',
+                thActions: 'الإجراءات',
+                emptyTitle: 'لا توجد أوردرات مسجلة',
+                emptySub: 'قم بإضافة أوردر جديد أو إعادة تجميع البيانات.',
+                modalAddTitle: 'إضافة أوردر جديد',
+                modalEditTitle: 'تعديل بيانات الأوردر',
+                lblDayDate: 'اليوم والتاريخ *',
+                lblLocation: 'الموقع (Location) *',
+                lblMiles: 'الأميال المتوقعة (Miles)',
+                lblMapUrl: 'رابط اللوكيشن (Google Maps)',
+                lblTime: 'التوقيت *',
+                lblHours: 'عدد الساعات',
+                lblStops: 'عدد المحطات',
+                lblPackages: 'عدد الباكجات',
+                lblAmount: 'المبلغ الإجمالي ($) *',
+                lblFuel: 'مصاريف البنزين ($)',
+                lblNotes: 'ملاحظات / Gate Code',
+                btnCancel: 'إلغاء',
+                btnSave: 'حفظ الأوردر',
+                btnDelivered: 'مكتمل (تراجع)',
+                btnDeliverNow: 'رايح أوصله',
+                btnMap: 'الخريطة',
+                confirmReset: 'هل أنت تأكد من استعادة البيانات الافتراضية؟',
+                confirmClear: 'هل أنت متاكد من حذف جميع الأوردرات؟',
+                confirmDelete: 'هل أنت متاكد من حذف هذا الأوردر؟',
+                msgReset: 'تمت استعادة البيانات بنجاح',
+                msgClear: 'تم مسح جميع البيانات',
+                msgAdd: 'تم إضافة الأوردر بنجاح',
+                msgUpdate: 'تم تحديث الأوردر بنجاح',
+                msgDelete: 'تم حذف الأوردر بنجاح',
+                msgCompleted: 'تم التوصيل! تمت إضافة الأرباح',
+                msgReturned: 'تم إرجاع الأوردر للقائمة',
+                stopsLabel: 'محطة',
+                pkgsLabel: 'باكج',
+                milesLabel: 'ميل'
+            },
+            en: {
+                headerTitle: 'Amazon Flex <span class="amazon-text-gradient">Dashboard</span>',
+                headerSub: 'Track shifts, net earnings, gas, & estimated miles',
+                btnAddOrder: 'Add Order',
+                completedIncome: 'Net Earnings',
+                totalFuel: 'Fuel Expenses',
+                totalMiles: 'Total Miles',
+                pendingInc: 'Pending',
+                totalPackages: 'Total Packages',
+                deliveredPkgs: 'Delivered',
+                pkgsText: 'pkgs',
+                avgHourlyRate: 'Avg Hourly Rate',
+                topLocation: 'Top Location',
+                searchPlaceholder: 'Search location, day, notes...',
+                optPending: '⏳ Upcoming Shifts',
+                optCompleted: '✅ Completed Shifts',
+                optAll: '🌐 Show All',
+                optAllDays: 'All Days',
+                btnReset: 'Restore Default',
+                btnClear: 'Clear All',
+                tableTitle: 'Shifts, Miles & Packages Tracker',
+                thDayDate: 'Day & Date',
+                thLocation: 'Location',
+                thTime: 'Time & Rate',
+                thCounts: 'Miles / Packages',
+                thAmount: 'Pay & Fuel',
+                thActions: 'Actions',
+                emptyTitle: 'No Orders Registered',
+                emptySub: 'Add a new order or click restore default data.',
+                modalAddTitle: 'Add New Order',
+                modalEditTitle: 'Edit Order',
+                lblDayDate: 'Day & Date *',
+                lblLocation: 'Location *',
+                lblMiles: 'Est. Miles',
+                lblMapUrl: 'Location (Google Maps)',
+                lblTime: 'Time Slot *',
+                lblHours: 'Shift Hours',
+                lblStops: 'Stops Count',
+                lblPackages: 'Packages Count',
+                lblAmount: 'Pay Amount ($) *',
+                lblFuel: 'Fuel Expense ($)',
+                lblNotes: 'Notes / Gate Code',
+                btnCancel: 'Cancel',
+                btnSave: 'Save Order',
+                btnDelivered: 'Completed (Undo)',
+                btnDeliverNow: 'Delivering Now',
+                btnMap: 'Map',
+                confirmReset: 'Are you sure you want to restore default sheet data?',
+                confirmClear: 'Are you sure you want to delete all orders?',
+                confirmDelete: 'Are you sure you want to delete this order?',
+                msgReset: 'Restored default paper data successfully',
+                msgClear: 'Cleared all data',
+                msgAdd: 'Order added successfully',
+                msgUpdate: 'Order updated successfully',
+                msgDelete: 'Order deleted successfully',
+                msgCompleted: 'Delivered! Earnings calculated',
+                msgReturned: 'Returned order to pending list',
+                stopsLabel: 'Stops',
+                pkgsLabel: 'Pkgs',
+                milesLabel: 'mi'
+            }
+        };
+
+        // Average Miles DB estimated by drivers per station
+        const locationMilesEst = {
+            'bloomington': 35,
+            'corona': 28,
+            'ontario': 22,
+            'riverside': 25,
+            'redlands': 40,
+            'fontana': 30,
+            'san bernardino': 32
+        };
+
+        // Initial default data
+        const initialData = [
+            { day: "Tuesday", date: "11/10", location: "Bloomington", mapUrl: "", time: "2:30 am - 5:30 am", hours: 3, stops: 1, packages: 15, miles: 35, amount: 75.00, fuel: 10.00, notes: "", completed: false },
+            { day: "Wednesday", date: "11/11", location: "Bloomington", mapUrl: "", time: "9:15 pm - 11:15 pm", hours: 2, stops: 1, packages: 10, miles: 35, amount: 50.00, fuel: 5.00, notes: "", completed: false },
+            { day: "Thursday", date: "11/12", location: "Corona", mapUrl: "", time: "7:30 am - 9:00 am", hours: 1.5, stops: 1, packages: 8, miles: 28, amount: 40.50, fuel: 8.00, notes: "", completed: false },
+            { day: "Thursday", date: "11/12", location: "Bloomington", mapUrl: "", time: "1:15 pm - 3:45 pm", hours: 2.5, stops: 1, packages: 12, miles: 35, amount: 69.00, fuel: 10.00, notes: "", completed: false },
+            { day: "Thursday", date: "11/12", location: "Bloomington", mapUrl: "", time: "8:45 pm - 10:45 pm", hours: 2, stops: 1, packages: 9, miles: 35, amount: 50.00, fuel: 6.00, notes: "", completed: false },
+            { day: "Friday", date: "11/13", location: "Bloomington", mapUrl: "", time: "2:15 am - 5:15 am", hours: 3, stops: 1, packages: 16, miles: 35, amount: 75.00, fuel: 12.00, notes: "", completed: false }
+        ];
+
+        let orders = [];
+
+        window.onload = function() {
+            setLanguage(currentLang);
+            loadOrders();
+        };
+
+        function autoEstimateMiles() {
+            const locInput = document.getElementById('orderLocation').value.trim().toLowerCase();
+            const milesInput = document.getElementById('orderMiles');
+            if(!milesInput.value && locInput) {
+                for (let loc in locationMilesEst) {
+                    if(locInput.includes(loc)) {
+                        milesInput.value = locationMilesEst[loc];
+                        break;
+                    }
+                }
+            }
+        }
+
+        function loadOrders() {
+            const saved = localStorage.getItem('amazon_orders_db');
+            if (saved !== null) {
+                try {
+                    orders = JSON.parse(saved);
+                    orders = orders.map(o => ({
+                        ...o,
+                        hours: o.hours ? parseFloat(o.hours) : 3,
+                        miles: o.miles ? parseFloat(o.miles) : 30,
+                        fuel: o.fuel ? parseFloat(o.fuel) : 0,
+                        notes: o.notes || "",
+                        stops: o.stops !== undefined ? parseInt(o.stops) : 1,
+                        packages: o.packages !== undefined ? parseInt(o.packages) : 0,
+                        completed: o.completed || false
+                    }));
+                } catch(e) {
+                    orders = JSON.parse(JSON.stringify(initialData));
+                    saveToLocalStorage();
+                }
+            } else {
+                orders = JSON.parse(JSON.stringify(initialData));
+                saveToLocalStorage();
+            }
+            filterOrders();
+        }
+
+        function renderTable(filteredData) {
+            const tbody = document.getElementById('ordersTableBody');
+            const cardsContainer = document.getElementById('mobileCardsContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            tbody.innerHTML = '';
+            cardsContainer.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                
+                filteredData.forEach((item) => {
+                    const originalIndex = orders.indexOf(item);
+                    
+                    const shiftHours = parseFloat(item.hours) || 3;
+                    const orderHourly = shiftHours > 0 ? (parseFloat(item.amount) / shiftHours).toFixed(2) : "0.00";
+
+                    const mapBtnHtml = item.mapUrl ? `
+                        <a href="${item.mapUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 transition" title="Map">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <span>${i18n[currentLang].btnMap}</span>
+                        </a>
+                    ` : '';
+
+                    const notesHtml = item.notes ? `
+                        <div class="text-[10px] text-slate-400 bg-slate-900/60 px-2 py-0.5 rounded border border-slate-700/50 mt-1 truncate max-w-full">
+                            <i class="fa-solid fa-sticky-note text-amber-400/80 mr-1"></i> ${item.notes}
+                        </div>
+                    ` : '';
+
+                    const completeActionBtnMobile = item.completed ? `
+                        <button onclick="toggleComplete(${originalIndex})" class="flex-1 py-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>${i18n[currentLang].btnDelivered}</span>
+                        </button>
+                    ` : `
+                        <button onclick="toggleComplete(${originalIndex})" class="flex-1 py-1.5 amazon-gradient text-slate-950 font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/10">
+                            <i class="fa-solid fa-truck-fast"></i>
+                            <span>${i18n[currentLang].btnDeliverNow}</span>
+                        </button>
+                    `;
+
+                    // Mobile Cards View
+                    const card = document.createElement('div');
+                    card.className = `p-3.5 rounded-xl border ${item.completed ? 'bg-slate-900/50 border-slate-800 opacity-75' : 'bg-slate-800/60 border-slate-700/60'} shadow-md space-y-2`;
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between border-b border-slate-700/50 pb-2">
+                            <div class="flex items-center gap-1.5">
+                                <span class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">${item.day}</span>
+                                <span class="text-xs font-semibold text-slate-300">${item.date}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-extrabold text-emerald-400 text-base">$${parseFloat(item.amount).toFixed(2)}</span>
+                                <span class="text-[10px] font-bold text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded ml-1 border border-sky-500/20">$${orderHourly}/h</span>
+                                ${item.fuel > 0 ? `<div class="text-[10px] text-rose-400 font-semibold">-$${parseFloat(item.fuel).toFixed(2)} ⛽</div>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs text-slate-300">
+                            <div class="flex items-center gap-1 truncate max-w-[180px]">
+                                <i class="fa-solid fa-location-dot text-slate-400 text-[11px]"></i>
+                                <span class="truncate font-medium">${item.location}</span>
+                            </div>
+                            ${mapBtnHtml}
+                        </div>
+
+                        <div class="flex items-center justify-between text-[11px] text-slate-400">
+                            <div class="flex items-center gap-1 font-mono">
+                                <i class="fa-regular fa-clock text-slate-500"></i>
+                                <span>${item.time}</span>
+                                <span class="text-[10px] text-slate-400 font-semibold">(${shiftHours}h)</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span class="bg-purple-500/10 text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/20 font-semibold">
+                                    <i class="fa-solid fa-road text-[9px] mr-0.5"></i> ${item.miles || 30} ${i18n[currentLang].milesLabel}
+                                </span>
+                                <span class="bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/20 font-semibold">
+                                    ${item.packages || 0} ${i18n[currentLang].pkgsLabel}
+                                </span>
+                            </div>
+                        </div>
+
+                        ${notesHtml}
+
+                        <div class="pt-1 flex items-center gap-2">
+                            ${completeActionBtnMobile}
+                            <button onclick="editOrder(${originalIndex})" class="w-8 h-8 rounded-xl bg-slate-800 text-sky-400 flex items-center justify-center transition border border-slate-700 shrink-0">
+                                <i class="fa-solid fa-pen text-xs"></i>
+                            </button>
+                            <button onclick="deleteOrder(${originalIndex})" class="w-8 h-8 rounded-xl bg-slate-800 text-rose-400 flex items-center justify-center transition border border-slate-700 shrink-0">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    `;
+                    cardsContainer.appendChild(card);
+
+                    // Desktop Table View
+                    const completeActionBtn = item.completed ? `
+                        <button onclick="toggleComplete(${originalIndex})" class="px-3 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>${i18n[currentLang].btnDelivered}</span>
+                        </button>
+                    ` : `
+                        <button onclick="toggleComplete(${originalIndex})" class="px-3 py-1 amazon-gradient text-slate-950 font-bold hover:opacity-90 rounded-lg text-xs transition flex items-center gap-1 shadow-md shadow-amber-500/10">
+                            <i class="fa-solid fa-truck-fast"></i>
+                            <span>${i18n[currentLang].btnDeliverNow}</span>
+                        </button>
+                    `;
+
+                    const tr = document.createElement('tr');
+                    tr.className = `hover:bg-slate-800/50 transition duration-150 ${item.completed ? 'opacity-75 bg-slate-900/40' : ''}`;
+                    tr.innerHTML = `
+                        <td class="p-3 font-semibold text-slate-200">
+                            <span class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold inline-block mx-1">${item.day}</span>
+                            <span>${item.date}</span>
+                        </td>
+                        <td class="p-3 text-slate-300">
+                            <div class="flex items-center flex-wrap gap-1">
+                                <i class="fa-solid fa-location-dot text-slate-500 mx-1 text-xs"></i>
+                                <span>${item.location}</span>
+                                ${mapBtnHtml}
+                            </div>
+                            ${notesHtml}
+                        </td>
+                        <td class="p-3 text-slate-300 font-mono text-xs">
+                            <i class="fa-regular fa-clock text-slate-500 mx-1"></i>
+                            ${item.time}
+                            <span class="text-[10px] text-sky-400 font-bold bg-sky-500/10 px-1 py-0.5 rounded ml-1 border border-sky-500/20">$${orderHourly}/h (${shiftHours}h)</span>
+                        </td>
+                        <td class="p-3 text-slate-300 text-xs">
+                            <div class="flex items-center gap-1.5">
+                                <span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded font-semibold">
+                                    <i class="fa-solid fa-road text-[9px] mr-1"></i>${item.miles || 30} ${i18n[currentLang].milesLabel}
+                                </span>
+                                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-semibold">
+                                    ${item.packages || 0} ${i18n[currentLang].pkgsLabel}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="p-3 font-bold">
+                            <div class="text-emerald-400 text-base">$${parseFloat(item.amount).toFixed(2)}</div>
+                            ${item.fuel > 0 ? `<div class="text-[11px] text-rose-400 font-medium">-$${parseFloat(item.fuel).toFixed(2)} gas</div>` : ''}
+                        </td>
+                        <td class="p-3 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                ${completeActionBtn}
+                                <button onclick="editOrder(${originalIndex})" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-400 flex items-center justify-center transition border border-slate-700" title="Edit">
+                                    <i class="fa-solid fa-pen text-xs"></i>
+                                </button>
+                                <button onclick="deleteOrder(${originalIndex})" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-rose-400 flex items-center justify-center transition border border-slate-700" title="Delete">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            updateStats();
+            document.getElementById('showingCount').innerText = `${currentLang === 'ar' ? 'عرض' : 'Showing'} ${filteredData.length} ${currentLang === 'ar' ? 'من' : 'of'} ${orders.length}`;
+        }
+
+        function updateStats() {
+            const completedOrders = orders.filter(o => o.completed);
+            
+            const totalGrossInc = completedOrders.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+            const totalFuelExp = completedOrders.reduce((sum, item) => sum + parseFloat(item.fuel || 0), 0);
+            const netInc = totalGrossInc - totalFuelExp;
+
+            const pendingOrders = orders.filter(o => !o.completed);
+            const totalPendingInc = pendingOrders.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+            
+            const grandTotalPkgs = orders.reduce((sum, item) => sum + (parseInt(item.packages) || 0), 0);
+            const grandTotalMiles = orders.reduce((sum, item) => sum + (parseFloat(item.miles) || 0), 0);
+            const totalHoursCompleted = completedOrders.reduce((sum, item) => sum + (parseFloat(item.hours) || 3), 0);
+            const hourlyRate = totalHoursCompleted > 0 ? (netInc / totalHoursCompleted) : 0;
+
+            // Top Location
+            const locCounts = {};
+            let topLoc = "-";
+            let maxCount = 0;
+            orders.forEach(item => {
+                locCounts[item.location] = (locCounts[item.location] || 0) + 1;
+                if(locCounts[item.location] > maxCount) {
+                    maxCount = locCounts[item.location];
+                    topLoc = item.location;
+                }
+            });
+
+            document.getElementById('netIncome').innerText = `$${netInc.toFixed(2)}`;
+            document.getElementById('totalFuel').innerText = `$${totalFuelExp.toFixed(2)}`;
+            document.getElementById('totalMiles').innerText = `${grandTotalMiles} mi`;
+            document.getElementById('grossIncome').innerHTML = `${currentLang === 'ar' ? 'الإجمالي قبل البنزين:' : 'Gross:'} <strong class="text-emerald-400">$${totalGrossInc.toFixed(2)}</strong>`;
+            document.getElementById('pendingIncome').innerHTML = `${i18n[currentLang].pendingInc}: <strong class="text-amber-400">$${totalPendingInc.toFixed(2)}</strong>`;
+            
+            document.getElementById('totalPackages').innerText = grandTotalPkgs;
+            document.getElementById('avgHourlyRate').innerText = `$${hourlyRate.toFixed(2)}/h`;
+            document.getElementById('topLocation').innerText = topLoc;
+        }
+
+        function editOrder(index) {
+            const item = orders[index];
+            document.getElementById('editIndex').value = index;
+            document.getElementById('orderDay').value = item.day;
+            document.getElementById('orderDate').value = item.date;
+            document.getElementById('orderLocation').value = item.location;
+            document.getElementById('orderMiles').value = item.miles || 30;
+            document.getElementById('orderMapUrl').value = item.mapUrl || '';
+            document.getElementById('orderTime').value = item.time;
+            document.getElementById('orderHours').value = item.hours || 3;
+            document.getElementById('orderStops').value = item.stops || 1;
+            document.getElementById('orderPackages').value = item.packages || 0;
+            document.getElementById('orderAmount').value = item.amount;
+            document.getElementById('orderFuel').value = item.fuel || '';
+            document.getElementById('orderNotes').value = item.notes || '';
+            
+            openModal(true);
+        }
+
+        function saveOrder(event) {
+            event.preventDefault();
+
+            const index = parseInt(document.getElementById('editIndex').value);
+            const isEditing = index !== -1;
+            
+            const newOrder = {
+                day: document.getElementById('orderDay').value,
+                date: document.getElementById('orderDate').value.trim(),
+                location: document.getElementById('orderLocation').value.trim(),
+                miles: parseFloat(document.getElementById('orderMiles').value) || 30,
+                mapUrl: document.getElementById('orderMapUrl').value.trim(),
+                time: document.getElementById('orderTime').value.trim(),
+                hours: parseFloat(document.getElementById('orderHours').value) || 3,
+                stops: parseInt(document.getElementById('orderStops').value) || 1,
+                packages: parseInt(document.getElementById('orderPackages').value) || 0,
+                amount: parseFloat(document.getElementById('orderAmount').value) || 0,
+                fuel: parseFloat(document.getElementById('orderFuel').value) || 0,
+                notes: document.getElementById('orderNotes').value.trim(),
+                completed: isEditing ? orders[index].completed : false
+            };
+
+            if (!isEditing) {
+                orders.push(newOrder);
+                showToast(i18n[currentLang].msgAdd, "success");
+            } else {
+                orders[index] = newOrder;
+                showToast(i18n[currentLang].msgUpdate, "success");
+            }
+
+            saveToLocalStorage();
+            filterOrders();
+            closeModal();
+        }
+
+        function toggleComplete(index) {
+            orders[index].completed = !orders[index].completed;
+            saveToLocalStorage();
+            filterOrders();
+            if(orders[index].completed) {
+                showToast(i18n[currentLang].msgCompleted, "success");
+            } else {
+                showToast(i18n[currentLang].msgReturned, "info");
+            }
+        }
+
+        function deleteOrder(index) {
+            if (confirm(i18n[currentLang].confirmDelete)) {
+                orders.splice(index, 1);
+                saveToLocalStorage();
+                filterOrders();
+                showToast(i18n[currentLang].msgDelete, "danger");
+            }
+        }
+
+        function filterOrders() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const day = document.getElementById('dayFilter').value;
+            const status = document.getElementById('statusFilter').value;
+
+            const filtered = orders.filter(item => {
+                const matchesSearch = item.location.toLowerCase().includes(search) || 
+                                     item.day.toLowerCase().includes(search) || 
+                                     item.date.toLowerCase().includes(search) ||
+                                     (item.notes && item.notes.toLowerCase().includes(search));
+                
+                const matchesDay = (day === 'ALL' || item.day === day);
+                
+                let matchesStatus = true;
+                if (status === 'pending') matchesStatus = !item.completed;
+                else if (status === 'completed') matchesStatus = item.completed;
+
+                return matchesSearch && matchesDay && matchesStatus;
+            });
+
+            renderTable(filtered);
+        }
+
+        function openModal(isEdit = false) {
+            const modal = document.getElementById('orderModal');
+            document.getElementById('modalTitle').innerText = isEdit ? i18n[currentLang].modalEditTitle : i18n[currentLang].modalAddTitle;
+            if(!isEdit) {
+                document.getElementById('orderForm').reset();
+                document.getElementById('editIndex').value = "-1";
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('orderModal').classList.add('hidden');
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('amazon_orders_db', JSON.stringify(orders));
+        }
+
+        function resetToDefaultData() {
+            if (confirm(i18n[currentLang].confirmReset)) {
+                orders = JSON.parse(JSON.stringify(initialData));
+                saveToLocalStorage();
+                filterOrders();
+                showToast(i18n[currentLang].msgReset, "success");
+            }
+        }
+
+        function clearAllOrders() {
+            if (confirm(i18n[currentLang].confirmClear)) {
+                orders = [];
+                saveToLocalStorage();
+                filterOrders();
+                showToast(i18n[currentLang].msgClear, "danger");
+            }
+        }
+
+        let currentLang = localStorage.getItem('amazon_lang') || 'ar';
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            localStorage.setItem('amazon_lang', currentLang);
+            setLanguage(currentLang);
+            filterOrders();
+        }
+
+        function setLanguage(lang) {
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.getElementById('langBtnText').innerText = lang === 'ar' ? 'EN' : 'عربي';
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang][key]) {
+                    el.innerText = i18n[lang][key];
+                }
+            });
+
+            document.getElementById('headerTitle').innerHTML = i18n[lang].headerTitle;
+            document.getElementById('headerSub').innerText = i18n[lang].headerSub;
+            document.getElementById('btnAddOrder').innerText = i18n[lang].btnAddOrder;
+            document.getElementById('searchInput').placeholder = i18n[lang].searchPlaceholder;
+        }
+
+        function exportCSV() {
+            if(orders.length === 0) return;
+            let csvContent = "data:text/csv;charset=utf-8,Day,Date,Location,Time,Hours,Miles,Packages,Amount,Fuel,Notes,Completed\n";
+            orders.forEach(o => {
+                csvContent += `"${o.day}","${o.date}","${o.location}","${o.time}",${o.hours || 3},${o.miles || 30},${o.packages || 0},${o.amount},${o.fuel || 0},"${o.notes || ''}",${o.completed}\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `amazon_orders_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function showToast(msg, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = msg;
+            if(type === 'success') toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+            else if(type === 'danger') toastIcon.className = "fa-solid fa-triangle-exclamation text-rose-400 text-lg";
+            else toastIcon.className = "fa-solid fa-circle-info text-sky-400 text-lg";
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
